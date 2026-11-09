@@ -362,8 +362,8 @@ let currentSearchResults = [];
 
 const A=document.getElementById("app");
 const id=q=>q.y+"-"+q.n;
-const S=()=>{try{return JSON.parse(localStorage.getItem("qb"))||{w:{},c:0,t:0}}catch(e){return{w:{},c:0,t:0}}};
-const save=s=>{try{localStorage.setItem("qb",JSON.stringify(s))}catch(e){}};
+const S=()=>{try{return JSON.parse(localStorage.getItem("qb_cap"))||{w:{},c:0,t:0}}catch(e){return{w:{},c:0,t:0}}};
+const save=s=>{try{localStorage.setItem("qb_cap",JSON.stringify(s))}catch(e){}};
 const L="ABCDE";
 
 // 題庫檔案名稱可依實際會考題庫替換
