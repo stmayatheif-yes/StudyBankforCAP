@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>會考國文刷題</title>
+
+<meta property="og:title" content="會考國文刷題系統">
+<meta property="og:description" content="收錄 110-115 會考國文歷屆選擇題。提供隨機刷題、依年度練習、錯題複習與深淺色模式。">
+
+<style>
+  /* 顏色變數設定 */
+  :root {
+    color-scheme: light dark;
+    --bg: #f0f2f5; --fg: #1a1a1a; --card: #ffffff; --bd: #e0e0e0;
+    --ok: #10b981; --no: #ef4444; --ac: #3b82f6; --ac-hover: #2563eb;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --radius: 12px; --notice-bg: #eff6ff; --notice-bd: #bfdbfe; --notice-fg: #1e3a8a;
+  }
+  @media(prefers-color-scheme: dark) {
+    :root {
+      --bg: #111827; --fg: #f3f4f6; --card: #1f2937; --bd: #374151;
+      --ok: #34d399; --no: #f87171; --ac: #60a5fa; --ac-hover: #3b82f6;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); --notice-bg: #1e3a8a33; --notice-bd: #1e40af; --notice-fg: #bfdbfe;
+    }
+  }
+  html[data-theme="light"] {
+    color-scheme: light; --bg: #f0f2f5; --fg: #1a1a1a; --card: #ffffff; --bd: #e0e0e0;
+    --ok: #10b981; --no: #ef4444; --ac: #3b82f6; --ac-hover: #2563eb;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); --notice-bg: #eff6ff; --notice-bd: #bfdbfe; --notice-fg: #1e3a8a;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark; --bg: #111827; --fg: #f3f4f6; --card: #1f2937; --bd: #374151;
+    --ok: #34d399; --no: #f87171; --ac: #60a5fa; --ac-hover: #3b82f6;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); --notice-bg: #1e3a8a33; --notice-bd: #1e40af; --notice-fg: #bfdbfe;
+  }
+
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 system-ui, -apple-system, "Noto Sans TC", sans-serif;
+    -webkit-font-smoothing: antialiased; transition: background 0.3s ease, color 0.3s ease;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 20px; padding-top: 85px; }
+
+  .theme-toggle {
+    position: fixed; top: 24px; right: 24px; z-index: 999; background: var(--card);
+    border: 1px solid var(--bd); border-radius: 50%; width: 44px; height: 44px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: var(--shadow); font-size: 0.65rem; font-weight: 500;
+    line-height: 1.1; color: var(--fg); padding: 0; margin: 0; transition: all 0.2s ease;
+  }
+  .theme-toggle:hover { transform: translateY(-2px); border-color: var(--ac); color: var(--ac); }
+
+  .card { background: var(--card); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid var(--bd); transition: background 0.3s ease, border-color 0.3s ease; }
+
+  .sys-notice {
+    background: var(--notice-bg); border: 1px solid var(--notice-bd); color: var(--notice-fg);
+    border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; font-size: 0.95rem;
+    box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start; white-space: pre-wrap;
+  }
+  .sys-notice-icon { font-size: 1.2rem; line-height: 1.2; }
+  .sys-notice-content { flex: 1; }
+
+  .header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .header-row h2 { margin: 0; font-size: 1.5rem; margin-right: 4px; }
+  
+  .btn-icon { 
+    padding: 6px 10px; font-size: 0.85rem; border-radius: 6px; margin: 0; 
+    background: var(--bg); border-color: var(--bd); color: var(--fg); opacity: 0.8;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease; cursor: pointer;
+    gap: 6px;
+  }
+  .btn-icon:hover { opacity: 1; border-color: var(--ac); color: var(--ac); transform: translateY(-1px); }
+  
+  .btn-icon svg { width: 16px; height: 16px; stroke-width: 1.5; }
+  .search-btn-text { color: var(--fg); opacity: 0.6; }
+  .btn-icon:hover .search-btn-text { opacity: 1; color: var(--ac); }
+
+  /* 通用 SVG 圖標樣式 */
+  .svg-icon { width: 18px !important; height: 18px !important; stroke-width: 2; flex-shrink: 0; }
+  .svg-icon-lg { width: 24px !important; height: 24px !important; stroke-width: 1.5; flex-shrink: 0; }
+
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.2s ease; }
+  .modal-overlay.active { opacity: 1; visibility: visible; }
+  .modal-content { background: var(--card); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow); max-width: 90%; width: 400px; transform: translateY(20px); transition: all 0.2s ease; border: 1px solid var(--bd); line-height: 1.8; position: relative; }
+  .modal-overlay.active .modal-content { transform: translateY(0); }
+  
+  .modal-content h3 { margin-top: 0; margin-bottom: 16px; font-size: 1.2rem; border-bottom: 1px solid var(--bd); padding-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  
+  /* 折疊選單 (Accordion) 樣式 */
+  details.version-group {
+    margin-bottom: 16px;
+    background: var(--bg);
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  details.version-group summary {
+    padding: 12px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ac);
+    user-select: none;
+    transition: background 0.2s ease;
+  }
+  details.version-group summary::-webkit-details-marker { display: none; }
+  details.version-group summary:hover { background: color-mix(in srgb, var(--ac) 8%, var(--card)); }
+  
+  /* 動畫箭頭 */
+  details.version-group summary::before {
+    content: '▶';
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+  }
+  details.version-group[open] summary::before {
+    transform: rotate(90deg);
+  }
+
+  .history-scroll-container { display: flex; overflow-x: auto; gap: 16px; padding: 20px 16px 10px 16px; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; border-top: 1px dashed var(--bd); }
+  .history-scroll-container::-webkit-scrollbar { display: none; }
+  
+  .history-item-horizontal { flex: 0 0 200px; background: var(--card); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; position: relative; display: flex; flex-direction: column; }
+  .history-item-horizontal::before { content: ''; position: absolute; top: -6px; left: 20px; width: 10px; height: 10px; border-radius: 50%; background: var(--bd); }
+  .history-item-horizontal.latest::before { background: var(--ac); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac) 30%, transparent); }
+  .history-item-horizontal strong { color: var(--ac); font-size: 1rem; margin-bottom: 4px; }
+  .history-date { font-size: 0.75rem; opacity: 0.6; margin-bottom: 8px; }
+  .history-desc { font-size: 0.9rem; line-height: 1.4; }
+
+  .modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 24px; }
+  .btn-secondary { background: var(--bg); color: var(--fg); border: 1px solid var(--bd); font-weight: normal; padding: 12px; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-secondary:hover { background: color-mix(in srgb, var(--ac) 10%, var(--card)); border-color: var(--ac); }
+
+  p { margin-top: 0; margin-bottom: 16px; }
+
+  button, select, input { font: inherit; color: inherit; background: var(--card); border: 1px solid var(--bd); border-radius: 8px; padding: 10px 16px; margin: 4px 0; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  button:hover:not(:disabled), select:hover, input:focus { border-color: var(--ac); transform: translateY(-1px); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  input { cursor: text; transform: none !important; }
+  select { appearance: none; padding-right: 32px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+
+  .opt { display: block; width: 100%; text-align: left; padding: 16px; margin-bottom: 12px; border-radius: 10px; background: var(--bg); line-height: 1.5; letter-spacing: 0.5px; box-shadow: none; }
+  .opt:hover:not(.ok):not(.no):not(:disabled) { background: color-mix(in srgb, var(--ac) 8%, var(--card)); border-color: var(--ac); }
+  .opt:disabled { cursor: default; }
+  .sel { border-color: var(--ac) !important; background: color-mix(in srgb, var(--ac) 15%, var(--card)) !important; outline: 2px solid var(--ac); outline-offset: -2px; }
+  .ok { border-color: var(--ok) !important; background: color-mix(in srgb, var(--ok) 15%, var(--card)) !important; color: var(--ok); }
+  .no { border-color: var(--no) !important; background: color-mix(in srgb, var(--no) 15%, var(--card)) !important; color: var(--no); }
+
+  .go { background: var(--ac); color: #fff; border: none; font-weight: bold; width: 100%; padding: 14px; margin-top: 12px; border-radius: 10px; box-shadow: 0 2px 4px color-mix(in srgb, var(--ac) 40%, transparent); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .go:hover:not(:disabled) { background: var(--ac-hover); transform: translateY(-2px); box-shadow: 0 4px 8px color-mix(in srgb, var(--ac) 50%, transparent); }
+
+  .meta { color: var(--fg); opacity: 0.6; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px dashed var(--bd); }
+  .meta button { padding: 6px 12px; font-size: 0.85rem; margin: 0; display: inline-flex; align-items: center; justify-content: center; }
+  .feedback { margin-top: 20px; padding: 16px; border-radius: 8px; background: var(--bg); border-left: 4px solid var(--ac); }
+
+  .btn-next { background: var(--ac); color: #fff; border: none; padding: 14px; width: 100%; font-weight: bold; border-radius: 10px; box-shadow: 0 2px 4px color-mix(in srgb, var(--ac) 40%, transparent); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-next:hover { background: var(--ac-hover); transform: translateY(-2px); box-shadow: 0 4px 8px color-mix(in srgb, var(--ac) 50%, transparent); }
+
+  .type-select-btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; border: 2px solid var(--bd); background: var(--bg); cursor: pointer; border-radius: 10px; transition: 0.2s; gap: 8px; }
+  .type-select-btn:hover { border-color: var(--ac); color: var(--ac); }
+  .type-select-btn.selected { border-color: var(--ac); background: color-mix(in srgb, var(--ac) 15%, var(--card)); color: var(--ac); }
+
+  .search-result-item {
+    display: block; width: 100%; text-align: left; background: var(--bg);
+    border: 1px solid var(--bd); border-radius: 8px; padding: 12px 16px;
+    margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease;
+    font-size: 0.95rem; line-height: 1.5; box-shadow: none;
+  }
+  .search-result-item:hover {
+    border-color: var(--ac); background: color-mix(in srgb, var(--ac) 8%, var(--card));
+  }
+  .search-result-meta {
+    font-size: 0.8rem; color: var(--ac); font-weight: bold; margin-bottom: 4px; display: block;
+  }
+  .highlight { color: #ef4444; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">深色<br>模式</button>
+
+<main id="app"></main>
+
+<!-- 版本彈窗 -->
+<div id="versionModal" class="modal-overlay" onclick="closeVersionModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="svg-icon" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+      版本內容
+    </h3>
+    <div id="currentVersionContent"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="switchModal('versionModal', 'historyModal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="svg-icon" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        歷史版本一覽
+      </button>
+      <button class="go" onclick="closeVersionModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- 歷史版本彈窗 -->
+<div id="historyModal" class="modal-overlay" onclick="closeVersionModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="svg-icon" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"></path><path d="M5 2h14"></path><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path></svg>
+      歷史版本
+    </h3>
+    
+    <details class="version-group">
+      <summary>1.0 版本系列</summary>
+      <div class="history-scroll-container" id="historyList1"></div>
+    </details>
+
+    <details class="version-group">
+      <summary>2.0 版本系列</summary>
+      <div style="padding: 16px; text-align: center; opacity: 0.6; font-size: 0.9rem;">
+        敬請期待未來的更新！
+      </div>
+    </details>
+
+    <div class="modal-actions">
+      <button class="go" onclick="closeVersionModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- 搜尋彈出視窗 -->
+<div id="searchModal" class="modal-overlay" onclick="closeSearchModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()" style="width: 500px; max-height: 80vh; overflow-y: auto;">
+    <h3>題目搜尋</h3>
+    <div style="display: flex; gap: 8px; margin-top: 16px;">
+      <input type="text" id="searchInput" placeholder="請輸入關鍵字..." style="flex: 1; margin: 0;" onkeypress="if(event.key === 'Enter') searchQuestions()">
+      <button onclick="searchQuestions()" style="margin: 0; background: var(--ac); color: #fff; border: none; flex-shrink: 0;">搜尋</button>
+    </div>
+    <div id="searchResultsContainer" style="margin-top: 20px;"></div>
+    <div class="modal-actions" style="margin-top: 24px;">
+      <button class="go" style="background: var(--bd); color: var(--fg); box-shadow: none;" onclick="closeSearchModal()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- 題型彈窗 -->
+<div id="typeModal" class="modal-overlay" onclick="closeTypeModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="svg-icon" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+      針對題型練習
+    </h3>
+    <p style="margin-bottom: 8px; font-weight: bold;">1. 選擇題型：</p>
+    <button class="type-select-btn" id="btnTypeSingle" onclick="selectType('single')">單選題</button>
+    <button class="type-select-btn" id="btnTypeMulti" onclick="selectType('multi')">多選題</button>
+    <p style="margin-bottom: 8px; margin-top: 24px; font-weight: bold;">2. 選擇順序：</p>
+    <div class="modal-actions" style="margin-top: 0;">
+      <button class="btn-secondary" onclick="startTypePractice('shuffle')">打亂題號順序</button>
+      <button class="btn-secondary" onclick="startTypePractice('sort')">按照年份題號</button>
+    </div>
+    <div class="modal-actions" style="margin-top: 16px;">
+      <button class="go" style="background: var(--bd); color: var(--fg); box-shadow: none;" onclick="closeTypeModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div id="reportModal" class="modal-overlay" onclick="closeReportModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+// ==========================================
+// 🌟 版本紀錄設定區
+// ==========================================
+const VERSION_HISTORY = [
+  { version: "v1.9.1", desc: "會考版本，優化歷史版本一覽介面。", date: "11/09 08:15" },
+  { version: "v1.9.0", desc: "網站圖標煥新，取代emoji。", date: "11/09 00:35" },
+  { version: "v1.8.2", desc: "優化搜尋圖標顯示。", date: "11/08 23:35" },
+  { version: "v1.8.1", desc: "優化搜尋介面與結果顯示。", date: "11/08 21:50" },
+  { version: "v1.8.0", desc: "新增題目搜尋功能。", date: "11/08 21:45" },
+  { version: "v1.7.0", desc: "新增寄送答題紀錄功能。", date: "11/08 16:10" },
+  { version: "v1.6.0", desc: "新增針對題型練習功能。", date: "11/08 15:50" },
+  { version: "v1.5.0", desc: "新增上一題功能與優化部份文字顯示。", date: "11/08 15:30" },
+  { version: "v1.4.0", desc: "優化介面顯示錯誤與刷題邏輯。", date: "11/08 13:50" },
+  { version: "v1.3.0", desc: "新增歷來版本一覽功能。", date: "11/08 02:30" },
+  { version: "v1.2.0", desc: "新增深色模式/淺色模式切換功能。", date: "11/08 02:00" },
+  { version: "v1.1.0", desc: "新增公告與版本內容功能。", date: "11/08 01:30" },
+  { version: "v1.0.0", desc: "新增110~115歷屆試題。", date: "11/08 01:00" }
+];
+
+function renderVersions() {
+  const current = VERSION_HISTORY[0];
+  document.getElementById('currentVersionContent').innerHTML = `
+    ★當前版本：${current.version}<br>
+    ★版本內容：${current.desc}<br>
+    ★更新時間：${current.date}
+  `;
+
+  const v1History = VERSION_HISTORY.filter(v => v.version.startsWith('v1.'));
+  const sortedV1 = [...v1History].reverse();
+  
+  let historyHTML = "";
+  sortedV1.forEach((item, index) => {
+    const isLatest = index === sortedV1.length - 1; 
+    historyHTML += `
+      <div class="history-item-horizontal ${isLatest ? 'latest' : ''}">
+        <strong>${item.version}</strong>
+        <div class="history-date">${item.date}</div>
+        <div class="history-desc">${item.desc}</div>
+      </div>
+    `;
+  });
+  document.getElementById('historyList1').innerHTML = historyHTML;
+}
+renderVersions();
+
+// ==========================================
+// 🌓 深淺色模式
+// ==========================================
+const themeToggleBtn = document.getElementById('themeToggle');
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeText(savedTheme);
+  } else {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    updateThemeText(isDark ? 'dark' : 'light');
+  }
+}
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  let newTheme;
+  if (currentTheme === 'dark') { newTheme = 'light'; } 
+  else if (currentTheme === 'light') { newTheme = 'dark'; } 
+  else {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    newTheme = isDark ? 'light' : 'dark';
+  }
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  updateThemeText(newTheme);
+}
+function updateThemeText(theme) {
+  if (theme === 'dark') { themeToggleBtn.innerHTML = '淺色<br>模式'; } 
+  else { themeToggleBtn.innerHTML = '深色<br>模式'; }
+}
+initTheme();
+
+// ==========================================
+// 🌟 系統設定與公告（已改為會考）
+// ==========================================
+const SYSTEM_NOTICE = "歡迎使用會考國文刷題系統！\n目前收錄 110-115 年會考國文選擇題。\n祝大家會考順利，答題如有神！";
+const SYNC_URL="";
+let Q=[],list=[],i=0,picks=new Set(),done=false;
+let userAnswers = {}; 
+let selectedType = null; 
+let sessionStats = { total: 0, correct: 0 };
+let currentSearchResults = []; 
+
+const A=document.getElementById("app");
+const id=q=>q.y+"-"+q.n;
+const S=()=>{try{return JSON.parse(localStorage.getItem("qb"))||{w:{},c:0,t:0}}catch(e){return{w:{},c:0,t:0}}};
+const save=s=>{try{localStorage.setItem("qb",JSON.stringify(s))}catch(e){}};
+const L="ABCDE";
+
+// 題庫檔案名稱可依實際會考題庫替換
+Promise.all(["./questions.json","./q2.json","./q3.json","./q4.json","./q5.json","./q6.json"].map(f=>fetch(f).then(r=>r.ok?r.json():[]).catch(()=>[]))).then(a=>{Q=a.flat();if(!Q.length)throw 0;home()}).catch(()=>A.textContent="讀取失敗，請確認題庫已上傳");
+
+function openVersionModal() { document.getElementById('versionModal').classList.add('active'); }
+function closeVersionModal(e) {
+  if (!e || e.target.classList.contains('modal-overlay') || e.target.tagName === 'BUTTON') {
+    document.getElementById('versionModal').classList.remove('active');
+    document.getElementById('historyModal').classList.remove('active');
+  }
+}
+function switchModal(closeId, openId) {
+  document.getElementById(closeId).classList.remove('active');
+  document.getElementById(openId).classList.add('active');
+}
+
+// ==========================================
+// 🔍 搜尋彈窗與邏輯
+// ==========================================
+function openSearchModal() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResultsContainer').innerHTML = ''; 
+  document.getElementById('searchModal').classList.add('active');
+  setTimeout(() => document.getElementById('searchInput').focus(), 100);
+}
+function closeSearchModal(e) {
+  if (!e || e.target.classList.contains('modal-overlay') || e.target.tagName === 'BUTTON') {
+    document.getElementById('searchModal').classList.remove('active');
+  }
+}
+function normalizeText(text) {
+  const map = { '（': '(', '）': ')', '？': '?', '！': '!', '，': ',', '。': '.', '、': ',', '：': ':', '；': ';', '「': '"', '」': '"', '『': '"', '』': '"' };
+  return text.replace(/[（）？！」』，。、：；「『]/g, match => map[match] || match);
+}
+function escapeHTML(str) {
+  return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+}
+function escapeRegExp(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function highlightKeyword(text, kw) {
+  if (!kw) return escapeHTML(text);
+  const safeKw = escapeRegExp(kw);
+  const regex = new RegExp(`(${safeKw})`, 'gi');
+  return escapeHTML(text).replace(regex, '<span class="highlight">$1</span>');
+}
+function searchQuestions() {
+  const rawKeyword = document.getElementById('searchInput').value.trim();
+  if (!rawKeyword) { alert("請輸入要搜尋的關鍵字！"); return; }
+  const normKeyword = normalizeText(rawKeyword).toLowerCase();
+  currentSearchResults = Q.filter(q => {
+    const normQText = normalizeText(q.q).toLowerCase();
+    const normOText = q.o.map(opt => normalizeText(opt).toLowerCase()).join(" ");
+    return normQText.includes(normKeyword) || normOText.includes(normKeyword);
+  });
+  const container = document.getElementById('searchResultsContainer');
+  if (!currentSearchResults.length) {
+    container.innerHTML = `<p style="text-align: center; color: var(--no); margin-top: 20px;">找不到包含「${escapeHTML(rawKeyword)}」的題目</p>`;
+    return;
+  }
+  currentSearchResults.sort((a, b) => {
+    if (a.y !== b.y) return a.y - b.y;
+    return parseInt(a.n) - parseInt(b.n);
+  });
+  let html = `<p style="font-size: 0.9rem; margin-bottom: 12px;">找到 <strong>${currentSearchResults.length}</strong> 筆結果：</p>`;
+  currentSearchResults.forEach((q, index) => {
+    let textToShow = q.q;
+    const normTextToShow = normalizeText(textToShow).toLowerCase();
+    let matchIndex = normTextToShow.indexOf(normKeyword);
+    if (matchIndex > 40) {
+      textToShow = "..." + textToShow.substring(matchIndex - 30, matchIndex + 40) + "...";
+    } else if (textToShow.length > 70) {
+      textToShow = textToShow.substring(0, 70) + "...";
+    }
+    let highlightedText = escapeHTML(textToShow);
+    const safeKw = escapeRegExp(rawKeyword);
+    const safeKwNorm = escapeRegExp(normalizeText(rawKeyword));
+    const regex = new RegExp(`(${safeKw}|${safeKwNorm})`, 'gi');
+    highlightedText = highlightedText.replace(regex, '<span class="highlight">$1</span>');
+    const typeStr = q.a.length > 1 ? "[多選]" : "[單選]";
+    html += `
+      <button class="search-result-item" onclick="startFromSearch(${index})">
+        <span class="search-result-meta">${q.y} 會考國文${typeStr}第${q.n}題</span>
+        <span>${highlightedText}</span>
+      </button>
+    `;
+  });
+  container.innerHTML = html;
+}
+function startFromSearch(index) {
+  closeSearchModal();
+  list = [...currentSearchResults]; 
+  i = index; 
+  userAnswers = {};
+  sessionStats = { total: list.length, correct: 0 };
+  show();
+}
+
+// ==========================================
+// 🎯 針對題型練習邏輯
+// ==========================================
+function openTypeModal() {
+  selectedType = null;
+  document.getElementById('btnTypeSingle').classList.remove('selected');
+  document.getElementById('btnTypeMulti').classList.remove('selected');
+  document.getElementById('typeModal').classList.add('active');
+}
+function closeTypeModal(e) {
+  if (!e || e.target.classList.contains('modal-overlay') || e.target.tagName === 'BUTTON') {
+    document.getElementById('typeModal').classList.remove('active');
+  }
+}
+function selectType(type) {
+  selectedType = type;
+  document.getElementById('btnTypeSingle').classList.toggle('selected', type === 'single');
+  document.getElementById('btnTypeMulti').classList.toggle('selected', type === 'multi');
+}
+function startTypePractice(order) {
+  if (!selectedType) { alert("請先選擇「單選」或「多選」喔！"); return; }
+  closeTypeModal();
+  list = Q.filter(q => {
+    if (selectedType === 'multi') return q.a.length > 1;
+    if (selectedType === 'single') return q.a.length === 1;
+    return false;
+  });
+  if (!list.length) { alert("找不到該題型的題目！"); return; }
+  if (order === 'shuffle') { list.sort(() => Math.random() - 0.5); } 
+  else if (order === 'sort') {
+    list.sort((a, b) => {
+      if (a.y !== b.y) return a.y - b.y;
+      return parseInt(a.n) - parseInt(b.n);
+    });
+  }
+  i = 0;
+  userAnswers = {};
+  sessionStats = { total: list.length, correct: 0 }; 
+  show();
+}
+
+// ==========================================
+// 📝 刷題主邏輯
+// ==========================================
+function home(){
+  const ys = [...new Set(Q.map(q=>q.y))].sort((a,b) => a - b);
+  const s=S();
+  let noticeHTML = "";
+  if (SYSTEM_NOTICE.trim() !== "") {
+    noticeHTML = `
+      <div class="sys-notice">
+        <div class="sys-notice-icon">📢</div>
+        <div class="sys-notice-content">${SYSTEM_NOTICE}</div>
+      </div>
+    `;
+  }
+
+  A.innerHTML=`${noticeHTML}
+  <div class="card">
+    <div class="header-row">
+      <h2>會考國文刷題</h2>
+      <button class="btn-icon" onclick="openVersionModal()" title="版本內容">版本內容</button>
+      <button class="btn-icon" onclick="openSearchModal()" title="搜尋題目">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="10" cy="10" r="7"></circle>
+          <line x1="21" y1="21" x2="15" y2="15"></line>
+        </svg>
+        <span class="search-btn-text">搜尋題目</span>
+      </button>
+    </div>
+    <p class="meta">
+      <span>題庫 ${Q.length} 題｜作答 ${s.t}，答對 ${s.c}（${s.t?Math.round(s.c/s.t*100):0}%）｜錯題 ${Object.keys(s.w).length}</span>
+    </p>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      
+      <button class="go" onclick="start('all')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+          <path d="M16 3h5v5"></path>
+          <path d="M4 20L21 3"></path>
+          <path d="M21 16v5h-5"></path>
+          <path d="M15 15l6 6"></path>
+          <path d="M4 4l5 5"></path>
+        </svg>
+        隨機刷題
+      </button>
+
+      <button class="go" onclick="openTypeModal()" style="background: var(--ok); box-shadow: 0 2px 4px color-mix(in srgb, var(--ok) 40%, transparent);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+          <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+        </svg>
+        針對題型練習
+      </button>
+      
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <select id="yr" style="flex: 1;">${ys.map(y=>`<option value="${y}">${y} 年</option>`)}</select>
+        <button onclick="start('y',yr.value)" style="flex: 1; display: flex; align-items: center; justify-content: center;">依年度</button>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="start('w')" style="flex: 1; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          錯題本
+        </button>
+        <button onclick="if(confirm('清除紀錄？')){save({w:{},c:0,t:0});home()}" style="flex: 1; color: var(--no); display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          清除紀錄
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function start(m,v){
+  const s=S();
+  list=Q.filter(q=>m=="all"||(m=="y"&&q.y==v)||(m=="w"&&s.w[id(q)]));
+  if(!list.length){alert("沒有題目");return}
+  if (m === "all" || m === "w") { list.sort(()=>Math.random() - 0.5); } 
+  else if (m === "y") { list.sort((a, b) => parseInt(a.n) - parseInt(b.n)); }
+  i=0;
+  userAnswers = {}; 
+  sessionStats = { total: list.length, correct: 0 };
+  show();
+}
+
+function show(){
+  const q=list[i];
+  picks = new Set(userAnswers[id(q)] || []);
+  done = userAnswers[id(q)] !== undefined;
+
+  A.innerHTML=`<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px dashed var(--bd);">
+      <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.6; font-size: 0.9rem;">第 ${i+1} / ${list.length} 題｜${q.y} 會考 第${q.n}題${q.a.length>1?"（多選）":""}</span>
+      <button onclick="prev()" ${i===0?'disabled':''} style="padding: 4px 10px; font-size: 0.8rem; margin: 0 8px; flex-shrink: 0;">上一題</button>
+      <button onclick="home()" style="padding: 6px 12px; font-size: 0.85rem; margin: 0; flex-shrink: 0;">結束</button>
+    </div>
+    <p style="font-size: 1.1rem; font-weight: 500;">${q.q}</p>`+
+    q.o.map((t,k)=>{
+      let cls = "opt";
+      if (done) {
+        if (q.a.includes(L[k])) cls += " ok";
+        else if (picks.has(k)) cls += " no";
+      } else if (picks.has(k)) {
+        cls += " sel";
+      }
+      let cleanText = t.replace(/^\([A-E]\)\s*/, '').replace(/^[A-E][\.\、]\s*/, '');
+      return `<button class="${cls}" id="o${k}" onclick="pick(${k})" ${done ? 'disabled' : ''}>(${L[k]}) ${cleanText}</button>`;
+    }).join("")+
+    `<div id="f">${done ? generateFeedback(q) : `<button class="go" onclick="submit()">送出答案</button>`}</div>
+  </div>`;
+}
+
+function generateFeedback(q){
+  const p = userAnswers[id(q)] ? [...userAnswers[id(q)]].sort().map(k=>L[k]).join("") : "";
+  const ok = p == q.a;
+  
+  let isLast = (i === list.length - 1);
+  
+  let feedbackIcon = ok ? 
+    `<svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon-lg"><polyline points="20 6 9 17 4 12"></polyline></svg>` : 
+    `<svg viewBox="0 0 24 24" fill="none" stroke="var(--no)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon-lg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+  let nextIcon = isLast ? 
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>` : "";
+
+  let btnNext = `<button class="btn-next" onclick="${isLast ? 'showReport()' : 'next()'}">
+    ${nextIcon}
+    ${isLast ? "看測驗結果" : "下一題"}
+  </button>`;
+
+  return `
+    <div class="feedback" style="border-left-color: ${ok ? 'var(--ok)' : 'var(--no)'}">
+      <p style="margin: 0 0 12px 0; font-weight: bold; color: ${ok ? 'var(--ok)' : 'var(--no)'}; display: flex; align-items: center;">
+        ${feedbackIcon}
+        ${ok ? "答對了！" : "答錯了"}
+      </p>
+      <p style="margin: 0 0 16px 0; font-size: 0.95rem;">正確答案：<strong>${q.a}</strong></p>
+      ${btnNext}
+    </div>`;
+}
+
+function pick(k){
+  if(done)return;const q=list[i];
+  if(q.a.length==1){picks=new Set([k]);submit();return}
+  picks.has(k)?picks.delete(k):picks.add(k);
+  document.getElementById("o"+k).classList.toggle("sel");
+}
+
+function submit(){
+  if(done||!picks.size)return;
+  done=true;
+  const q=list[i],p=[...picks].sort().map(k=>L[k]).join(""),ok=p==q.a,s=S();
+  
+  userAnswers[id(q)] = [...picks];
+  if(ok) sessionStats.correct++;
+
+  s.t++;
+  if(ok){s.c++;delete s.w[id(q)]}else s.w[id(q)]=1;
+  save(s);
+  
+  q.o.forEach((_,k)=>{
+    const b=document.getElementById("o"+k);
+    b.classList.remove("sel");
+    if(q.a.includes(L[k]))b.classList.add("ok");
+    else if(picks.has(k))b.classList.add("no");
+    b.disabled = true; 
+  });
+  
+  document.getElementById("f").innerHTML = generateFeedback(q);
+  if(SYNC_URL)fetch(SYNC_URL,{method:"POST",mode:"no-cors",body:JSON.stringify({user:localStorage.getItem("uid")||(localStorage.uid=Math.random().toString(36).slice(2)),id:id(q),ok:ok,pick:p})}).catch(()=>{});
+}
+
+function prev(){ if(i>0){ i--; show(); } }
+function next(){ i++; i<list.length?show():showReport(); }
+
+// ==========================================
+// 📊 結算報告與寄信功能
+// ==========================================
+function showReport() {
+  const rate = sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0;
+  
+  document.querySelector('#reportModal .modal-content').innerHTML = `
+    <h3 style="display: flex; align-items: center; gap: 8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon-lg"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      測驗結果
+    </h3>
+    <div style="text-align: center; margin: 30px 0;">
+      <div style="font-size: 3rem; font-weight: bold; color: var(--ac); margin-bottom: 10px;">${rate}%</div>
+      <p style="font-size: 1.1rem; margin: 0;">總題數：<strong>${sessionStats.total}</strong> 題</p>
+      <p style="font-size: 1.1rem; margin: 0;">答對題數：<strong>${sessionStats.correct}</strong> 題</p>
+    </div>
+    <div class="modal-actions">
+      <button class="go" style="background: var(--ok);" onclick="sendEmailReport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        寄送答題紀錄
+      </button>
+      <button class="go" style="background: var(--bd); color: var(--fg); box-shadow: none;" onclick="closeReportModal(); home()">回首頁</button>
+    </div>
+  `;
+  document.getElementById('reportModal').classList.add('active');
+}
+
+function closeReportModal(e) {
+  if (!e || e.target.classList.contains('modal-overlay') || e.target.tagName === 'BUTTON') {
+    document.getElementById('reportModal').classList.remove('active');
+  }
+}
+
+function sendEmailReport() {
+  const rate = sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0;
+  const dateStr = new Date().toLocaleString('zh-TW');
+  
+  const subject = `【會考國文刷題】答題紀錄 - ${dateStr}`;
+  const body = `這是一封來自「會考國文刷題系統」的答題紀錄。\n\n測驗時間：${dateStr}\n本次作答題數：${sessionStats.total} 題\n答對題數：${sessionStats.correct} 題\n正確率：${rate}%\n\n繼續加油！祝你會考順利！`;
+
+  const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
+}
+</script>
+</body>
+</html>
